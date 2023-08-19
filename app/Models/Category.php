@@ -11,4 +11,12 @@ class Category extends Model
 
     protected $fillable = ['name'];
 
+   protected $withCount = ['posts'];
+
+
+    public function posts()
+    {
+        return $this->hasMany(Post::class);
+    }
+
 }
