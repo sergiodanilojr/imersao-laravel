@@ -18,3 +18,19 @@ Route::get('/hello-world', function () {
     $category = \App\Models\Category::with('posts')->find(2);
     dd($category);
 });
+
+Route::get('relationship', function () {
+    //$post = \App\Models\Post::with(['postTags.tag'])->first();
+
+    $post = \App\Models\Post::with(['tags'])->first();
+
+    $tags = \App\Models\Tag::all("id");
+    $ids = $tags->pluck('id')->all();
+
+    // $post->tags()->attach($ids);
+
+    // curl -X POST /posts/{id_post}/tags --data='{tags:[1,2,3]}'
+
+    dd($post->load(['tags']));
+
+});
