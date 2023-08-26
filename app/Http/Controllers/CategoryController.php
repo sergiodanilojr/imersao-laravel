@@ -3,31 +3,33 @@
 namespace App\Http\Controllers;
 
 use App\Exceptions\NotFoundException;
+use App\Http\Requests\StoreCategoryRequest;
+use App\Http\Requests\UpdateCategoryRequest;
 use App\Http\Resources\CategoryResource;
 use App\Models\Category;
+use App\Repositories\Eloquent\Contracts\CategoryEloquentRepositoryInterface;
+use App\Services\StoreCategory;
 use Illuminate\Http\Request;
 use Spatie\QueryBuilder\QueryBuilder;
 
 class CategoryController extends Controller
 {
+    public function __construct(
+        private StoreCategory $service,
+        private CategoryEloquentRepositoryInterface $repository
+    )
+    {
+    }
+
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-//        $categories = \App\Models\Category::with('posts')
-//            ->paginate(
-//                perPage: \request()->get('per_page'),
-//                page: \request()->get('page')
-//            );
-
-        $categories = QueryBuilder::for(Category::class)
-            ->allowedSorts(['created_at'])
-            ->allowedIncludes(['posts'])
-            ->paginate(
-                perPage: \request()->get('per_page'),
-                page: \request()->get('page')
-            )->appends(\request()->query());
+        $categories = $this->repository->paginate(
+            page: request()->get('page'),
+            perPage: request()->get('per_page')
+        );
 
         return CategoryResource::collection($categories);
     }
@@ -35,9 +37,12 @@ class CategoryController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreCategoryRequest $request)
     {
-        //
+
+        $category = $this->service->handle($request->validated());
+
+        return (new CategoryResource($category))->response()->setStatusCode(201);
     }
 
     /**
@@ -56,9 +61,18 @@ class CategoryController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(UpdateCategoryRequest $request, string $id)
     {
-        //
+        $category = Category::findOr(
+            $id,
+            fn() => throw new NotFoundException("Categoria não encontrada!")
+        );
+
+        $category->update($request->validated());
+
+        $category->refresh();
+
+        return (new CategoryResource($category));
     }
 
     /**

@@ -34,3 +34,17 @@ Route::get('relationship', function () {
     dd($post->load(['tags']));
 
 });
+
+Route::get('doubles', function (){
+   $invoice = 15979.32;
+
+   $installments = 13;
+
+   $installment = preg_replace(
+       "/[^0-9]/",
+       "",
+       ($invoice / $installments)
+   );
+
+   dd($invoice,$installment , ($installment * $installments));
+});
